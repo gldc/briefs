@@ -1,0 +1,74 @@
+name: Auto-merge Athena briefs
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: |
+      !github.event.pull_request.draft &&
+      (
+        startsWith(github.event.pull_request.head.ref, 'agent/deep-research/') ||
+        startsWith(github.event.pull_request.head.ref, 'agent/athena/') ||
+        startsWith(github.event.pull_request.head.ref, 'brief-')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect changed files
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(gh pr diff "$PR" --name-only -R "$GITHUB_REPOSITORY")
+          echo "Changed files:"
+          printf '  %s\n' "${files[@]}"
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "Empty diff — refusing to merge."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ok=true
+          for f in "${files[@]}"; do
+            case "$f" in
+              briefs/*.md|briefs/*/*.md|briefs/*/*/*.md|briefs/*/*/*/*.md) ;;
+              *) ok=false ;;
+            esac
+          done
+
+          if $ok; then
+            echo "All files are briefs/**/*.md — safe to auto-merge."
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Out-of-scope files present — leaving PR for human review."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Squash-merge PR
+        if: steps.scope.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr merge "$PR" \
+            --repo "$GITHUB_REPOSITORY" \
+            --squash \
+            --delete-branch \
+            --subject "$(gh pr view "$PR" -R "$GITHUB_REPOSITORY" --json title --jq .title)"
+
+      - name: Comment on out-of-scope PR
+        if: steps.scope.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" \
+            --body $'🤖 Auto-merge skipped — this PR touches files outside `briefs/**/*.md`. Leaving for human review.'
