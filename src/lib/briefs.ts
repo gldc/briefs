@@ -16,7 +16,8 @@ export function briefSlug(entry: Brief): string {
 }
 
 export function briefHref(entry: Brief): string {
-  return `/briefs/${entry.id}`;
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  return `${base}/${entry.id}`;
 }
 
 export function briefIssueNumber(entry: Brief, all: Brief[]): number {

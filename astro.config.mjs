@@ -5,7 +5,7 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://gldc.github.io',
-  base: '/briefs',
+  base: '/athena',
   trailingSlash: 'never',
   integrations: [sitemap()],
   vite: {
