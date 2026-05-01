@@ -4,8 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://gldc.github.io',
-  base: '/athena',
+  site: 'https://athenablogs.com',
   trailingSlash: 'never',
   integrations: [sitemap()],
   vite: {
