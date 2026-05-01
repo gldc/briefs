@@ -5,10 +5,12 @@ interface Props {
   title: string;
   description?: string;
   pathname?: string;
+  image?: string;
 }
 
-const { title, description = "Daily intelligence on AI & tech, distilled by Athena." } = Astro.props;
+const { title, description = "Daily intelligence on AI & tech, distilled by Athena.", image = "/og/default.png" } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImageURL = new URL(image, Astro.site).toString();
 const fullTitle = title === "Athena" ? "Athena · briefs" : `${title} · Athena`;
 ---
 
@@ -36,7 +38,9 @@ const fullTitle = title === "Athena" ? "Athena · briefs" : `${title} · Athena`
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageURL} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImageURL} />
   </head>
   <body>
     <slot />

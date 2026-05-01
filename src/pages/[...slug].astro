@@ -43,7 +43,7 @@ const older = idx < all.length - 1 ? all[idx + 1] : null;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
-<Layout title={`${formatShort(date)} brief`} description={summary}>
+<Layout title={`${formatShort(date)} brief`} description={summary} image={`/og/${entry.id}.png`}>
   <Header />
 
   <main class="mx-auto max-w-[78rem] px-6">
